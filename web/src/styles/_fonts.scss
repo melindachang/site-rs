@@ -1,3 +1,48 @@
+@use 'sass:string';
+@use 'sass:map';
+
+@function str-replace($string, $search, $replace: '') {
+  @if $search == '' {
+    @error "The search string can’t be empty.";
+  }
+
+  $index: string.index($string, $search);
+
+  @if $index {
+    @return string.slice($string, 1, $index - 1) + $replace +
+      str-replace(
+        string.slice($string, $index + string.length($search)),
+        $search,
+        $replace
+      );
+  } @else {
+    @return $string;
+  }
+}
+
+$font-weights: (
+  400: 'Regular',
+  500: 'Medium',
+  600: 'Semibold',
+  700: 'Bold',
+);
+
+@mixin font-face($name, $weight: 400, $style: regular) {
+  $name-path: str-replace($name, ' ', '');
+  $style-path: if($style == 'italic', 'Italic', '');
+
+  $path: $name-path + '/' + $name-path + '-' + map.get($font-weights, $weight) +
+    $style-path;
+
+  @font-face {
+    font-family: $name;
+    src: url('/fonts/' + $path + '.woff2') format('woff2');
+    src: url('/fonts/' + $path + '.woff') format('woff');
+    font-weight: $weight;
+    font-style: $style;
+  }
+}
+
 @import '@fontsource/libre-caslon-condensed/400.css';
 @import '@fontsource/libre-caslon-condensed/500.css';
 @import '@fontsource/libre-caslon-condensed/600.css';
@@ -7,3 +52,8 @@
 @import '@fontsource/libre-caslon-condensed/500-italic.css';
 @import '@fontsource/libre-caslon-condensed/600-italic.css';
 @import '@fontsource/libre-caslon-condensed/700-italic.css';
+
+@each $weight, $name in $font-weights {
+  @include font-face('Tiempos Text', $weight);
+  @include font-face('Tiempos Text', $weight, italic);
+}

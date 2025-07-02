@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import type { APIContext } from 'astro'
 import { getCollection } from 'astro:content'
+import { emphasizePreps } from '../../utils/utils'
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes')
@@ -16,7 +17,7 @@ const { Content } = await note.render()
   <div class="wrapper">
     <div class="metadata"></div>
     <article class="note">
-      <h1 class="note__title">{note.data.title}</h1>
+      <h1 class="note__title" set:html={emphasizePreps(note.data.title)} />
       <div class="note__body">
         <Content />
       </div>
@@ -28,23 +29,45 @@ const { Content } = await note.render()
   .wrapper {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    position: relative;
+    min-height: 100vh;
 
     & > *:first-child {
-      padding-right: 3.6rem;
+      padding: 0 3.6rem 0 1.8rem;
     }
 
     & > *:last-child {
-      padding-left: 3.6rem;
+      padding: 0 1.8rem 0 3.6rem;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      height: 100%;
+      left: 50%;
+      border-left: 1px solid var(--clr-primary);
+      opacity: 0.2;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: calc(50% - 16px);
+      top: 0;
+      width: 32px;
+      height: 100%;
+      border-left: 1px dashed rgba(63, 64, 61, 0.2);
+      border-right: 1px dashed rgba(63, 64, 61, 0.2);
     }
   }
 
-  .note {
-    &__title {
-      width: 65%;
-      font-family: var(--font-title);
-      font-size: calc(40.988px + 0.753012svw);
-      line-height: 0.95;
-      letter-spacing: -0.03em;
-    }
+  .note__title {
+    width: 65%;
+    font-family: var(--font-title);
+    font-size: calc(40.988px + 0.753012svw);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 10rem 0 0;
+    padding-bottom: 4rem;
   }
 </style>
