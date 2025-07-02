@@ -1,0 +1,117 @@
+---
+import NavDivider from './NavDivider.astro'
+import NavPill from './NavPill.svelte'
+
+const { showScrollProgress = false } = Astro.props
+---
+
+<nav class="nav">
+  <div class="nav__content">
+    <div class="nav__section">
+      <div class="nav__logo"><a href="/">Melinda Chang</a></div>
+      <div class="nav__link"><a href="/notes">Notes</a></div>
+    </div>
+    <div class="nav__section">
+      <div class="nav__link">
+        <a href="mailto:melindachang.hy@gmail.com">Email</a>
+      </div>
+      <div class="nav__link">
+        <a href="https://codeberg.org/melindachang" target="_blank">Codeberg</a>
+      </div>
+      <div class="nav__link">
+        <a
+          href="https://melindachang.codeberg.page/cv-typst/cv.pdf"
+          target="_blank">CV</a
+        >
+      </div>
+      {
+        showScrollProgress && (
+          <div class="nav__link">
+            <NavPill show client:load />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</nav>
+
+<style lang="scss">
+  .nav {
+    font-family: 'Commit Mono', monospace;
+    font-size: 1.2rem;
+    letter-spacing: -0.03em;
+
+    z-index: 300;
+    background-color: var(--clr-primary-inverted);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3.6rem;
+    padding: 0 1.8rem;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 1px;
+      width: 100%;
+      background-color: var(--clr-primary);
+      opacity: 0.2;
+    }
+
+    a {
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    &__content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+    }
+
+    &__section {
+      display: flex;
+      height: auto;
+    }
+
+    &__link {
+      display: flex;
+      align-items: center;
+      position: relative;
+
+      a {
+        padding: 0 1.2rem;
+        display: inline-block;
+        line-height: 1.4rem;
+        height: 1.4rem;
+
+        border-left: 1px dashed var(--clr-primary);
+        border-right: 1px dashed var(--clr-primary);
+      }
+
+      & ~ & {
+        a {
+          border-left: none;
+        }
+      }
+    }
+
+    &__logo {
+      font-size: 1.3rem;
+      padding-right: 1.2rem;
+
+      a {
+        color: var(--clr-primary-inverted);
+        background-color: var(--clr-primary);
+        padding: 2px 8px;
+        border-radius: 3px;
+      }
+    }
+  }
+</style>

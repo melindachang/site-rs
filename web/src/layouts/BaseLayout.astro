@@ -1,0 +1,25 @@
+---
+import '../styles/global.scss'
+
+import PageOverlay from '../components/PageOverlay.astro'
+import Nav from '../components/Nav.astro'
+
+const { showScrollProgress = false } = Astro.props
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <slot name="head" />
+  </head>
+  <body>
+    <PageOverlay />
+    <Nav showScrollProgress={showScrollProgress} />
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>

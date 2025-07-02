@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import type { APIContext } from 'astro'
+import { getCollection } from 'astro:content'
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes')
+  return notes.map(note => ({ params: { slug: note.slug }, props: { note } }))
+}
+
+const { note } = Astro.props
+const { Content } = await note.render()
+---
+
+<BaseLayout showScrollProgress>
+  <div class="wrapper">
+    <div class="metadata"></div>
+    <article class="note">
+      <h1 class="note__title">{note.data.title}</h1>
+      <div class="note__body">
+        <Content />
+      </div>
+    </article>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  .wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    & > *:first-child {
+      padding-right: 3.6rem;
+    }
+
+    & > *:last-child {
+      padding-left: 3.6rem;
+    }
+  }
+
+  .note {
+    &__title {
+      width: 65%;
+      font-family: var(--font-title);
+      font-size: calc(40.988px + 0.753012svw);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+  }
+</style>

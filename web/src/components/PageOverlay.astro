@@ -1,0 +1,35 @@
+---
+
+---
+
+<div class="overlay overlay--texture"></div>
+<div class="overlay overlay--border"></div>
+
+<style lang="scss">
+  @use '../styles/_variables';
+
+  .overlay {
+    position: fixed;
+    height: 100vh;
+    top: 0;
+    pointer-events: none;
+
+    &--texture {
+      width: 100%;
+      left: 0;
+      z-index: 2000;
+      opacity: 0.04;
+      background: url('../assets/paper.jpg') 0% 0% / 200px 200px;
+    }
+
+    &--border {
+      width: calc(100% - 3.6rem);
+      left: 1.8rem;
+      z-index: 100;
+
+      border-left: 1px solid var(--clr-primary);
+      border-right: 1px solid var(--clr-primary);
+      opacity: 0.2;
+    }
+  }
+</style>

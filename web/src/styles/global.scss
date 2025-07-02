@@ -1,0 +1,20 @@
+@forward './_preflight';
+@forward './_variables';
+@forward './_fonts';
+
+html {
+  font-size: 62.5%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: 1.6rem;
+
+  color: var(--clr-primary);
+  background-color: var(--clr-primary-inverted);
+}
+
+// wraps content
+main {
+  padding: 6rem 2.4rem 0 1.8rem;
+}
