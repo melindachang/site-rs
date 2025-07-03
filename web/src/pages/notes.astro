@@ -1,14 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { getCollection } from 'astro:content'
-import { emphasizePreps } from '../utils/utils'
+import { emphasizePreps, formatRawDate } from '../utils/utils'
 
 import arrowSvg from '../assets/arrow.svg?raw'
 
-const notes = await getCollection('notes')
+let notes = await getCollection('notes')
+notes = notes.sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
 ---
 
-<BaseLayout showScrollProgress>
+<BaseLayout>
   <Fragment name="head">
     <title>Notes | Melinda Chang</title>
   </Fragment>
@@ -27,16 +28,14 @@ const notes = await getCollection('notes')
           <i class="notes__entry__icon">
             <Fragment set:html={arrowSvg} />
           </i>
-          <h2
-            class="notes__entry__title"
-            set:html={emphasizePreps(note.data.title)}
-          />
+          <!-- <h2 -->
+          <!--   class="notes__entry__title" -->
+          <!--   set:html={emphasizePreps(note.data.title)} -->
+          <!-- /> -->
+          <h2 class="notes__entry__title">{note.data.title}</h2>
           <div class="notes__entry__metadata">
             <h3 class="notes__entry__byline">
-              {new Date(note.data.date)
-                .toISOString()
-                .slice(0, 10)
-                .replace(/-/g, '.')}
+              {formatRawDate(note.data.date)}
               {note.data.summary && `· ${note.data.summary}`}
             </h3>
             {note.data.tags && (
@@ -55,7 +54,7 @@ const notes = await getCollection('notes')
 
 <style lang="scss">
   .header {
-    padding: 0 2.2rem;
+    padding: 3rem 2.2rem 0;
 
     &__title {
       margin: 0 0 2rem;

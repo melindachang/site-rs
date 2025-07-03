@@ -1,8 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
+import CheckersSvg from '../../assets/CheckersSvg.svelte'
+
 import type { APIContext } from 'astro'
 import { getCollection } from 'astro:content'
-import { emphasizePreps } from '../../utils/utils'
+import { emphasizePreps, formatRawDate } from '../../utils/utils'
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes')
@@ -15,9 +17,21 @@ const { Content } = await note.render()
 
 <BaseLayout showScrollProgress>
   <div class="wrapper">
-    <div class="metadata"></div>
+    <div class="appendix"></div>
     <article class="note">
-      <h1 class="note__title" set:html={emphasizePreps(note.data.title)} />
+      <div class="note__meta">
+        <div class="note__meta__info">
+          <span style="margin-top: 2px"><CheckersSvg /></span>
+          <span
+            >{note.data.tags.join(' // ')}<br />{
+              formatRawDate(note.data.date)
+            }</span
+          >
+        </div>
+        <div class="note__meta__author">Written by <br /> Melinda CHang</div>
+      </div>
+      <!-- <h1 class="note__title" set:html={emphasizePreps(note.data.title)} /> -->
+      <h1 class="note__title">{note.data.title}</h1>
       <div class="note__body">
         <Content />
       </div>
@@ -32,12 +46,18 @@ const { Content } = await note.render()
     position: relative;
     min-height: 100vh;
 
-    & > *:first-child {
-      padding: 0 3.6rem 0 1.8rem;
-    }
+    & > * {
+      overflow: hidden;
+      min-width: 0;
 
-    & > *:last-child {
-      padding: 0 1.8rem 0 3.6rem;
+      &:first-child {
+        padding-right: 3.6rem;
+        padding-left: 1.8rem;
+      }
+      &:last-child {
+        padding-right: 1.8rem;
+        padding-left: 3.6rem;
+      }
     }
 
     &::before {
@@ -61,13 +81,36 @@ const { Content } = await note.render()
     }
   }
 
-  .note__title {
-    width: 65%;
-    font-family: var(--font-title);
-    font-size: calc(40.988px + 0.753012svw);
-    line-height: 0.95;
-    letter-spacing: -0.03em;
-    margin: 10rem 0 0;
-    padding-bottom: 4rem;
+  .note {
+    &__title {
+      width: 65%;
+      font-family: var(--font-title);
+      font-size: calc(40.988px + 0.753012svw);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin: 10rem 0 0;
+      padding-bottom: 4rem;
+    }
+
+    &__meta {
+      display: flex;
+      justify-content: space-between;
+      text-transform: uppercase;
+      font-size: 1.3rem;
+      font-family: var(--font-monospace);
+      &__info {
+        display: flex;
+        gap: 3.2rem;
+
+        span {
+          line-height: 1.4;
+        }
+      }
+
+      &__author {
+        text-align: right;
+        text-decoration: underline;
+      }
+    }
   }
 </style>

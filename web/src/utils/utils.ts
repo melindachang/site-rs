@@ -8,7 +8,19 @@
  */
 export function emphasizePreps(
   input: string,
-  words: string[] = ['of', 'and', 'or', 'to', 'for', 'in', 'on', 'at', 'by'],
+  words: string[] = [
+    'of',
+    'and',
+    'or',
+    'to',
+    'for',
+    'in',
+    'on',
+    'at',
+    'by',
+    'with',
+    'from',
+  ],
 ): string {
   if (!input) return input
 
@@ -16,4 +28,8 @@ export function emphasizePreps(
   const pattern = new RegExp(`\\b(${words.join('|')})\\b`, 'gi')
 
   return input.replace(pattern, match => `<em>${match}</em>`)
+}
+
+export function formatRawDate(input: Date) {
+  return input.toISOString().slice(0, 10).replace(/-/g, '.')
 }

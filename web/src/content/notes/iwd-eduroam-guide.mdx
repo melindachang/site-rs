@@ -62,10 +62,6 @@ EAP-PEAP-Phase2-Password=<PASSWORD>
 AutoConnect=true
 ```
 
-Naturally, you would replace the placeholders `<NETID>` with your
-Northwestern-issued netID and `<PASSWORD>` with your password. Leave everything
-else alone.
-
 The contents of this file were extracted from the [eduroam CAT
 installer](https://cat.eduroam.org/) for Linux, which is really a Python script
 with the iwd config buried inside somewhere—it’s easy enough to dig through
@@ -84,15 +80,15 @@ yourself needing to do so, a few things I found helpful:
   ```
   Just use the URI that follows; discard the `DNS:` prefix.
 
-## Connect to Wi-Fi
-
-You should be good to go. Run the following:
+Naturally, you would replace the placeholders `<NETID>` with your
+Northwestern-issued netID and `<PASSWORD>` with your password. Leave everything
+else alone, and you should be good to go. Run the following:
 
 ```sh
 iwctl station wlan0 connect eduroam
 ```
 
-Optionally, test your connection to see if it's throwing any errors:
+Optionally test your connection to see if it's throwing any errors:
 
 ```sh
 ping archlinux.org
