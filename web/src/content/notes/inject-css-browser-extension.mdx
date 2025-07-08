@@ -7,20 +7,19 @@ tags: ['Extensions', 'Web']
 published: true
 ---
 
-I regularly develop browser extensions for personal use. Of those, the
-majority introduce aesthetic or quality-of-life enhancements for
-specific websites that make use of extensive DOM manipulation and
-stylesheet injections&mdash;while it is entirely possible to
-accomplish this with a combination of userscript and stylesheet
-managers (I favor [Violentmonkey](https://violentmonkey.github.io/)
-and [Stylus](https://github.com/openstyles/stylus)), any one site
+I regularly develop browser extensions for personal use. It's entirely
+possible to make quality-of-life enhancements to various websites with
+a combination of userscript and stylesheet managers (I favor
+[Violentmonkey](https://violentmonkey.github.io/) and
+[Stylus](https://github.com/openstyles/stylus)), but any one site
 might require a suite of many interdependent scripts and themes to be
 installed and configured separately. Refactoring these into an
 extension can make sense.
 
-I've tried for a while now to nail down a stack and workflow to
-implement the base functionality I want (that is, programmatic
-stylesheet injections). I'm looking for it to support the following:
+Available tooling for extension development is dated, generally. I've
+tried for a while now to nail down a stack and workflow to implement
+the base functionality I want (that is, programmatic stylesheet
+injections) with minimal friction. It needs to support the following:
 
 1. _Firefox and Chrome._ I don't use Chromium-based browsers anymore,
    but supporting the former generally entails supporting the latter. I
@@ -29,8 +28,8 @@ stylesheet injections). I'm looking for it to support the following:
    the running.
 
 2. _Modern frameworks, TypeScript, and CSS preprocessing._ I use SCSS,
-   mostly, because I find that indented syntax sometimes interferes with
-   your formatter. I haven't written vanilla JavaScript or CSS since
+   mostly, because I find that indented syntax sometimes interferes
+   with formatters. I haven't written vanilla JavaScript or CSS since
    middle school and I do not intend to start now.
 
 3. _Hot module reload._ Specifically, the stylesheets must be watched
@@ -292,7 +291,7 @@ const modules = import.meta.glob<{ default: Tweak }>('./*/index.ts', {
 
 export const tweaks: Record<string, Tweak> = Object.fromEntries(
   Object.entries(modules).map(([path, mod]) => [
-    path.match(/\.\/([^/]+)\//)![1], // e.g. "darkMode"
+    path.match(/\.\/([^/]+)\//)![1]
     mod.default,
   ]),
 )
@@ -313,7 +312,7 @@ export default defineContentScript({
   cssInjectionMode: 'manual',
   runAt: 'document_start',
   async main() {
-    const settings = await getUserSettings() // e.g., { darkMode: true, test: false }
+    const settings = await getUserSettings() // { darkMode: bool; test: bool }
 
     for (const [name, tweak] of Object.entries(tweaks))
       if (settings[name]) tweak()

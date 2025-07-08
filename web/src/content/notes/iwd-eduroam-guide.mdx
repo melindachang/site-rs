@@ -3,14 +3,15 @@ title: 'Using iwd to Connect to Northwestern Eduroam Wi-Fi'
 author: 'Melinda Chang'
 date: 2025-05-09
 summary: 'For Arch installations, or anything else.'
-tags: ['college', 'linux']
+tags: ['linux']
 published: true
 ---
 
-I have attempted by this point to install Arch Linux on campus Wi-Fi twice.
-Unfortunately, the guest network is not an option, as Lynx (the only browser
-included in the installation medium) has some text rendering issue that
-prevents you from authenticating with their portal.
+I have attempted by this point to install Arch Linux on campus Wi-Fi
+twice[^1]. Unfortunately, the guest network is not an option, as Lynx
+(the only browser included in the installation medium) has some text
+rendering issue that prevents you from authenticating with their
+portal.
 
 That leaves eduroam and iwd. This is a Northwestern-specific guide, which I
 mention because the network configuration profile varies somewhat by school.
@@ -135,3 +136,5 @@ If you prefer to use NetworkManager after your installation is complete, it
 employs a wpa_supplicant backend by default. See how to switch to iwd
 [here](https://wiki.archlinux.org/title/NetworkManager#Using_iwd_as_the_Wi-Fi_backend)
 so that you can continue to use the configs that you just set up.
+
+[^1]: This is the footnote.

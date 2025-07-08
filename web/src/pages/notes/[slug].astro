@@ -3,7 +3,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro'
 
 import type { APIContext } from 'astro'
 import { getCollection } from 'astro:content'
-import { emphasizePreps, formatRawDate } from '../../utils/utils'
+import { emphasizePreps, formatRawDate } from '../../utils'
+
+import hijackFootnotes from '../../utils/hijack-footnotes.ts?client:load'
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes')
@@ -19,17 +21,18 @@ const { Content } = await note.render()
     <title>{note.data.title} | Melinda Chang</title>
   </Fragment>
   <div class="wrapper">
-    <div class="appendix"></div>
+    <!-- <div class="appendix"></div> -->
     <article class="note">
-      <div class="note__meta">
-        <div class="note__meta__info">
-          <span>Note // {formatRawDate(note.data.date)}</span>
-        </div>
-        <div class="note__meta__author">
-          Written by <br />
-          {note.data.author}
-        </div>
-      </div>
+      <!-- <div class="note__meta"> -->
+      <!--   <div class="note__meta__info"> -->
+      <!--     <span>Note // {formatRawDate(note.data.date)}</span> -->
+      <!--   </div> -->
+      <!--   <div class="note__meta__author"> -->
+      <!--     Written by <br /> -->
+      <!--     {note.data.author} -->
+      <!--   </div> -->
+      <!-- </div> -->
+      <span class="note__meta">Note // {formatRawDate(note.data.date)}</span>
       <h1 class="note__title">{note.data.title}</h1>
       <div class="note__body">
         <Content />
@@ -38,78 +41,99 @@ const { Content } = await note.render()
   </div>
 </BaseLayout>
 
+<script lang="ts">
+  const BREAKPOINT_LG = 992
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.innerWidth < BREAKPOINT_LG) return
+
+    const map = new Map()
+
+    document
+      .querySelectorAll('.footnotes li[id^="user-content-fn"]')
+      .forEach(li => {
+        const clone = li.cloneNode(true)
+        const backref = clone.querySelector('a[data-footnote-backref]')
+        backref?.remove()
+
+        map.set(li.id, clone.innerHTML)
+      })
+
+    document.querySelectorAll('a[href^="#user-content-fn"]').forEach(a => {
+      const fnId = a.getAttribute('href').slice(1)
+      const fnContent = map.get(fnId)
+      if (!fnContent) return
+
+      const container = document.createElement('aside')
+      container.className = 'margin-note'
+      container.innerHTML = fnContent
+
+      // a.insertAdjacentElement('afterend', container)
+    })
+  })
+</script>
+
 <style lang="scss">
   .wrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     position: relative;
     min-height: 100vh;
 
-    & > * {
-      overflow: hidden;
-      min-width: 0;
+    width: 100%;
+    padding: 2.4rem calc(25% + 3.6rem);
 
-      &:first-child {
-        padding-right: 3.6rem;
-        padding-left: 1.8rem;
-      }
-      &:last-child {
-        padding-right: 1.8rem;
-        padding-left: 3.6rem;
-      }
-    }
-
-    &::before {
-      content: '';
-      position: absolute;
-      height: 100%;
-      left: 50%;
-      border-left: 1px solid var(--clr-primary);
-      opacity: 0.2;
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      left: calc(50% - 16px);
-      top: 0;
-      width: 32px;
-      height: 100%;
-      border-left: 1px dashed rgba(63, 64, 61, 0.2);
-      border-right: 1px dashed rgba(63, 64, 61, 0.2);
-    }
+    //    & > * {
+    //      overflow: hidden;
+    //      min-width: 0;
+    //
+    //      &:first-child {
+    //        padding-right: 3.6rem;
+    //        padding-left: 1.8rem;
+    //      }
+    //      &:last-child {
+    //        padding-right: 1.8rem;
+    //        padding-left: 3.6rem;
+    //      }
+    //    }
+    //
+    //    &::before {
+    //      content: '';
+    //      position: absolute;
+    //      height: 100%;
+    //      left: 50%;
+    //      border-left: 1px solid var(--clr-primary);
+    //      opacity: 0.2;
+    //    }
+    //
+    //    &::after {
+    //      content: '';
+    //      position: absolute;
+    //      left: calc(50% - 16px);
+    //      top: 0;
+    //      width: 32px;
+    //      height: 100%;
+    //      border-left: 1px dashed rgba(63, 64, 61, 0.2);
+    //      border-right: 1px dashed rgba(63, 64, 61, 0.2);
+    //    }
   }
 
   .note {
+    width: 100%;
+    overflow: hidden;
+    padding-top: 10rem;
+
+    &__meta {
+      text-transform: uppercase;
+      font-family: var(--font-monospace);
+      font-size: 1.3rem;
+    }
+
     &__title {
       width: 65%;
       font-family: var(--font-title);
       font-size: calc(40.988px + 0.753012svw);
       line-height: 0.95;
       letter-spacing: -0.03em;
-      margin: 10rem 0 0;
-      padding-bottom: 4rem;
-    }
-
-    &__meta {
-      display: flex;
-      justify-content: space-between;
-      text-transform: uppercase;
-      font-size: 1.3rem;
-      font-family: var(--font-monospace);
-      &__info {
-        display: flex;
-        gap: 3.2rem;
-
-        span {
-          line-height: 1.4;
-        }
-      }
-
-      &__author {
-        text-align: right;
-        text-decoration: underline;
-      }
+      padding: 4rem 0;
     }
   }
 </style>
