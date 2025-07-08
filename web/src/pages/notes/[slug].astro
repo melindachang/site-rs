@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import CheckersSvg from '../../assets/CheckersSvg.svelte'
 
 import type { APIContext } from 'astro'
 import { getCollection } from 'astro:content'
@@ -16,21 +15,21 @@ const { Content } = await note.render()
 ---
 
 <BaseLayout showScrollProgress>
+  <Fragment name="head">
+    <title>{note.data.title} | Melinda Chang</title>
+  </Fragment>
   <div class="wrapper">
     <div class="appendix"></div>
     <article class="note">
       <div class="note__meta">
         <div class="note__meta__info">
-          <span style="margin-top: 2px"><CheckersSvg /></span>
-          <span
-            >{note.data.tags.join(' // ')}<br />{
-              formatRawDate(note.data.date)
-            }</span
-          >
+          <span>Note // {formatRawDate(note.data.date)}</span>
         </div>
-        <div class="note__meta__author">Written by <br /> Melinda CHang</div>
+        <div class="note__meta__author">
+          Written by <br />
+          {note.data.author}
+        </div>
       </div>
-      <!-- <h1 class="note__title" set:html={emphasizePreps(note.data.title)} /> -->
       <h1 class="note__title">{note.data.title}</h1>
       <div class="note__body">
         <Content />

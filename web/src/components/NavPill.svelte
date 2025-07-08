@@ -7,7 +7,9 @@
     scrollHeight = $state(1),
     innerHeight = $state(0)
 
-  let pct = $derived((scrollY / (scrollHeight - innerHeight)) * 100),
+  let pct = $derived(
+      Math.min((scrollY / (scrollHeight - innerHeight)) * 100, 100),
+    ),
     fmt = $derived(pct.toFixed(2).padStart(pct < 100 ? 5 : 6, '0'))
 
   onMount(() => {

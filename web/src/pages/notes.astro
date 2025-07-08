@@ -23,31 +23,31 @@ notes = notes.sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   </header>
   <article class="notes">
     {
-      notes.map(note => (
-        <a class="notes__entry" href={`/notes/${note.slug}`}>
-          <i class="notes__entry__icon">
-            <Fragment set:html={arrowSvg} />
-          </i>
-          <!-- <h2 -->
-          <!--   class="notes__entry__title" -->
-          <!--   set:html={emphasizePreps(note.data.title)} -->
-          <!-- /> -->
-          <h2 class="notes__entry__title">{note.data.title}</h2>
-          <div class="notes__entry__metadata">
-            <h3 class="notes__entry__byline">
-              {formatRawDate(note.data.date)}
-              {note.data.summary && `· ${note.data.summary}`}
-            </h3>
-            {note.data.tags && (
-              <div class="notes__entry__tags">
-                {note.data.tags.map(tag => (
-                  <span class="notes__entry__tag">{tag}</span>
-                ))}
+      notes.map(note => {
+        if (note.data.published) {
+          return (
+            <a class="notes__entry" href={`/notes/${note.slug}`}>
+              <i class="notes__entry__icon">
+                <Fragment set:html={arrowSvg} />
+              </i>
+              <h2 class="notes__entry__title">{note.data.title}</h2>
+              <div class="notes__entry__metadata">
+                <h3 class="notes__entry__byline">
+                  {formatRawDate(note.data.date)}
+                  {note.data.summary && `· ${note.data.summary}`}
+                </h3>
+                {note.data.tags && (
+                  <div class="notes__entry__tags">
+                    {note.data.tags.map(tag => (
+                      <span class="notes__entry__tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </a>
-      ))
+            </a>
+          )
+        }
+      })
     }
   </article>
 </BaseLayout>

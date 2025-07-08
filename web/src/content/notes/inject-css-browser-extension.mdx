@@ -4,11 +4,12 @@ author: Melinda Chang
 date: 2025-06-25
 summary: Toward ergonomic browser extension development.
 tags: ['Extensions', 'Web']
+published: true
 ---
 
 I regularly develop browser extensions for personal use. Of those, the
-majority make aesthetic or quality-of-life enhancements for specific
-websites that at once require extensive DOM manipulation and
+majority introduce aesthetic or quality-of-life enhancements for
+specific websites that make use of extensive DOM manipulation and
 stylesheet injections&mdash;while it is entirely possible to
 accomplish this with a combination of userscript and stylesheet
 managers (I favor [Violentmonkey](https://violentmonkey.github.io/)
@@ -19,16 +20,18 @@ extension can make sense.
 
 I've tried for a while now to nail down a stack and workflow to
 implement the base functionality I want (that is, programmatic
-stylesheet injections). For my sanity, it must support the following:
+stylesheet injections). I'm looking for it to support the following:
 
 1. _Firefox and Chrome._ I don't use Chromium-based browsers anymore,
-   but supporting the former generally entails supporting the latter.
-   [CRXJS](https://crxjs.dev/vite-plugin) relies on Chrome's API for hot
-   reload and is therefore out of the running.
+   but supporting the former generally entails supporting the latter. I
+   have used [CRXJS](https://crxjs.dev/vite-plugin) to this end before,
+   but it relies on Chrome's API for hot reload and is therefore out of
+   the running.
 
 2. _Modern frameworks, TypeScript, and CSS preprocessing._ I use SCSS,
-   mostly. I haven't had to write vanilla JavaScript or CSS since middle
-   school and I do not intend to start now.
+   mostly, because I find that indented syntax sometimes interferes with
+   your formatter. I haven't written vanilla JavaScript or CSS since
+   middle school and I do not intend to start now.
 
 3. _Hot module reload._ Specifically, the stylesheets must be watched
    as part of the dependency graph, but they should not be content
@@ -36,15 +39,15 @@ stylesheet injections). For my sanity, it must support the following:
 
 No tool presently offers a pipeline for (3) out of the box. After
 trying something like ten different build tools and wrangling together
-my own with Bun, I begrudgingly accept that [WXT](https://wxt.dev/) is
-the most comprehensive offering available. It is also in pre-release
-and has all of the bugs to show for it.
+my own with Bun, I begrudgingly acknowledge that
+[WXT](https://wxt.dev/) is the most comprehensive offering
+available. It's also in pre-release and has all of the bugs to show
+for it.
 
-_Edit (July 2025)._ I've made some changes to this implementation, and
+_Edit (2025-07)._ I've made some changes to this implementation, and
 it is now much more stable than it was previously (I used to rely on a
 patched version of WXT to make an `injection.scss`
-entrypoint). Regardless, I would remain cautious about using most of
-this code in production. More on this later.
+entrypoint). I consider this iteration largely production-ready.
 
 ## Getting started with WXT
 
@@ -54,6 +57,12 @@ scripting.
 
 ```sh
 bunx wxt@latest init
+```
+
+I'll also install my preferred preprocessor now:
+
+```sh
+bun add -D sass-embedded # or sass
 ```
 
 The base stylesheet we attempt to inject can contain any rule for
@@ -82,286 +91,238 @@ $color: blue;
 
 I would not place the `injection.scss` file in any directory where it
 would automatically be bundled, like `src/entrypoints` or
-`src/assets`. The process to make this work is much more fragile and
-complex than I'd like, and you wind up fighting most of WXT's defaults
-by hijacking its build process and patching the package and performing
-all manner of other messy interventions.
+`src/assets`. If you do, the process to get this to work is much more
+fragile and complex than I'd like, and you'll have to fight most of
+WXT's defaults by hijacking its build process and patching the package
+and performing all manner of messy interventions.
 
 What this means, then, is that we will be eschewing the conventional
 approach which involves specifying standalone CSS files as
-web-accessible resources. Instead, we exploit a Vite feature that
+web-accessible resources. Instead, we can exploit a Vite feature that
 will allow us to import our styles _inline_ and programmatically run
 the injection from there. We can encapsulate the logic we need in a
 standard TypeScript module&mdash;not an unlisted script, which would
 be as difficult to hot-reload as an unlisted stylesheet&mdash;that WXT
-will incorporate into the content script at build time. `content.ts`
-is an entrypoint by default and so is added to the dependency graph
-automatically.
+will incorporate into the content script at build time.
+
+Let's write that injection script:
+
+```ts
+// src/lib/injection.ts
+
+import css from './injection.scss?inline'
+
+const injectionMap = new Map<string, HTMLStyleElement>()
+const key = './injection.scss'
+
+export default function injectStyle() {
+  let style = injectionMap.get(key)
+
+  if (!style) {
+    style = document.createElement('style')
+    style.setAttribute('data-extension-style', key)
+    injectionMap.set(key, style)
+
+    const append = () => document.head!.appendChild(style)
+
+    document.head
+      ? append()
+      : new MutationObserver((_, obs) => {
+        if (document.head) {
+          obs.disconnect();
+          append();
+        }
+      }).observe(document.documentElement, { childList: true, subtree: true })
+    }
+
+    style.textContent = css
+  }
+}
+```
+
+This is a straightforward set of instructions to create a `<style>`
+element and fill it with our compiled SCSS. Other enhancements:
+
+- We track a reference to the `<style>` element in our `injectionMap`
+  with some identifier which I've hard-coded&mdash;this isn't a
+  particularly useful structure now, but it will accommodate more
+  stylesheets should we want them later. Because this function re-runs
+  upon hot reload, this will allow us to avoid injecting the same
+  styles multiple times.
+- The `MutationObserver` instance emulates the behavior of a CSS
+  content script with the option `"runAt": "document_start"` in the
+  manifest. We set it to listen for the `<head>` element to load in,
+  which will generally trigger a few moments before the
+  `DOMContentLoaded` event. This avoids the short delay that we would
+  otherwise observe between the initial paint and the application of
+  the stylesheet.
 
 Let's go to the content script. WXT requires that you declare the
 script and its various properties (that is, the ones you would
 ordinarily specify in the manifest) within a `defineContentScript()`
-function. The default template will include something like this:
-
-```ts
-// src/entrypoints/content.ts
-
-export default defineContentScript({
-  matches: ['*://*.google.com/*'],
-  main() {
-    console.log('Hello content.')
-  },
-})
-```
+function.
 
 You can reference more of the options that it accepts
 [here](https://wxt.dev/api/reference/wxt/type-aliases/ContentScriptDefinition.html#type-alias-contentscriptdefinition).
 The injection goes in the `main()` function, which will run when our
-route's domain matches `google.com`. Let's define a function that
-creates a DOM node that links to our style resource.
+route's domain matches `google.com`. For now, we can import and call
+the function we defined earlier:
 
 ```ts
 // src/entrypoints/content.ts
 
-const inject_style_and_repaint = (): void => {
-  const href = browser.runtime.getURL('assets/injection.css')
+import injectStyle from '../lib/injection'
 
-  const prev = document.querySelector('link[data-extension-style]')
-  if (prev) prev.remove()
-
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = href
-  link.dataset.extensionStyle = href
-
-  const parent = document.head ?? document.documentElement
-  parent.appendChild(link)
-}
-
-export default defineContentScript({
-  // ...
-})
-```
-
-Next, we write our logic in the `main()` function, which will simply
-call the function `inject_style_and_repaint()` on document load.
-
-```ts
-// src/entrypoints/content.ts
-
-//...
 export default defineContentScript({
   matches: ['*://*.google.com/*'],
+  run_at: 'document_start',
   main() {
-    if (
-      document.head ||
-      document.readyState === 'complete' ||
-      document.readyState === 'interactive'
-    ) {
-      inject_style_and_repaint()
-    } else {
-      window.addEventListener('DOMContentLoaded', inject_style_and_repaint, {
-        once: true,
-      })
-    }
+    injectStyle()
   },
 })
 ```
 
-## Bundle configuration
-
-WXT is based off of Vite, so we don't need to include any additional
-configuration in order for our stylesheet to be pre-processed:
+Finally, I test out hot reload by running the following:
 
 ```sh
-bun add -D sass-embedded
-```
-
-WXT generates our manifest at build time according to the target
-(Chrome or Firefox) that we specify, but we want to explicitly
-hard-code our stylesheet as a web-accessible resource so that we can
-retrieve it via `browser.runtime.getURL()`. We can define these
-options in the WXT config at the base of our project directory:
-
-```ts
-// wxt.config.ts
-import { defineConfig } from 'wxt'
-
-export default defineConfig({
-  srcDir: 'src',
-  modules: ['@wxt-dev/module-svelte'],
-  manifest: {
-    web_accessible_resources: [
-      { matches: ['*://*.google.com/*'], resources: ['assets/injection.css'] },
-    ],
-  },
-})
-```
-
-If we build for a Firefox target, which supports manifest V2, WXT will
-make the conversion automatically.
-
-## Enabling hot repaint
-
-The basic injection functionality will work without any further
-intervention. I can run the development server with my preferred
-browser target:
-
-```shellscript
 bun run dev:firefox
 ```
 
-After navigating to a URL under the matching domain (that is,
-`google.com`) search engine has changed to the color we
-specified&mdash;in my case, blue&mdash;in
-`src/assets/styles/_variables.scss`.
+Direct changes to `src/lib/injection.scss` should force the extension
+to reload immediately. If you write to the partials we declared in the
+directory `src/styles/`, you may have to give the injection file a
+prod to see changes propagate. Otherwise, it should be working as
+expected.
 
-By default, neither the unlisted styles included in the bundle via
-`src/entrypoints` nor the SASS dependencies they `@use` or `@forward`
-are included in the dependency graph. WXT exposes a somewhat limited
-API that allows us to rectify this behavior at build time via modules.
+## More modular injections
 
-Any script we include in the `modules/` folder WXT will automatically
-try to include. Let's make it:
+This project is adequate as is for individual injections, but what
+if&mdash;a fairly typical use case&mdash;we would like to run multiple
+at once according to user flags we save in browser storage? We'll need
+to restructure the project somewhat. I want each tweak to have its own
+directory within `src/lib/`, like so:
+
+```
+lib/
+├── tweaks/
+│   ├── darkMode/
+│   │   ├── index.ts
+│   │   └── injection.scss
+│   └── test/
+│       ├── index.ts
+│       └── injection.scss
+```
+
+Here, I've placed our `injection.scss` and `.ts` files into the
+`darkMode/` folder, and I've created some other within the directory
+`test/`. The implementation doesn't matter much. We can reuse the same
+code in `darkMode/index.ts` that we wrote earlier to inject the
+stylesheet in `test/`, so let's refactor that into its own global
+utility:
 
 ```ts
-// modules/scss-deps-hmr.ts
+// src/lib/utils/inject-style.ts
 
-import { defineWxtModule } from 'wxt/modules'
-import path from 'path'
-import fs from 'fs'
+const injectionMap = new Map<string, HTMLStyleElement>()
 
-export default defineWxtModule({
-  setup(wxt) {
-    wxt.hook('server:started', (wxt, server) => {
-      const injection = path.resolve(
-        wxt.config.root,
-        'src/entrypoints/injection.scss',
-      )
-      const themes_dir = path.resolve(wxt.config.root, 'src/lib/themes')
-      server.watcher.add(themes_dir)
-      server.watcher.on('change', async file => {
-        if (file.endsWith('.scss')) {
-          console.log(
-            '[scss-hmr] Invalidating module: ',
-            path.relative(wxt.config.root, injection),
-          )
+export function injectStyle(css: string, key: string): void {
+  let style = injectionMap.get(key)
 
-          await wxt.builder.build({
-            type: 'unlisted-style',
-            name: 'injection',
-            options: {},
-            inputPath: injection,
-            outputDir: path.resolve(wxt.config.outDir, 'assets'),
-          })
+  if (!style) {
+    style = document.createElement('style')
+    style.setAttribute('data-extension-style', key)
+    injectionMap.set(key, style)
 
-          server.reloadExtension()
-        }
-      })
-    })
-  },
+    const append = () => document.head!.appendChild(style!)
+
+    document.head
+      ? append()
+      : new MutationObserver((_, obs) => {
+          if (document.head) {
+            obs.disconnect()
+            append()
+          }
+        }).observe(document.documentElement, { childList: true, subtree: true })
+  }
+
+  style.textContent = css
+}
+```
+
+We can call it wherever needed, like so:
+
+```ts
+// src/lib/tweaks/darkMode/index.ts
+
+import { injectStyle } from '@/lib/utils/inject-style'
+
+export default function darkMode() {
+  injectStyle(styles, 'darkMode/injection.scss')
+}
+```
+
+I won't implement a full interface that allows users to define their
+local preferences, but I'll assume for simplicity's sake that we have
+some logic in our extension popup that saves them as boolean flags. We
+can write a function that allows us to fetch those preferences using
+the browser API:
+
+```ts
+// src/lib/utils/settings.ts
+
+export async function getUserSettings(): Promise<Record<string, boolean>> {
+  const result = await browser.storage.local.get()
+  return result as Record<string, boolean>
+}
+```
+
+In a new `src/lib/tweaks/index.ts` file, we can aggregate arbitrarily
+defined tweaks, so long as they're placed in their own directories and
+export some default function to be called by the content script. This
+uses `import.meta.glob` functionality from Vite (which underlies WXT).
+
+```ts
+// src/lib/tweaks/index.ts
+
+export type Tweak = () => void
+
+const modules = import.meta.glob<{ default: Tweak }>('./*/index.ts', {
+  eager: true,
 })
+
+export const tweaks: Record<string, Tweak> = Object.fromEntries(
+  Object.entries(modules).map(([path, mod]) => [
+    path.match(/\.\/([^/]+)\//)![1], // e.g. "darkMode"
+    mod.default,
+  ]),
+)
 ```
 
-A quick walkthrough of what this accomplishes:
-
-- WXT exposes a number of build events that we can hook into to
-  perform modifications; in our case, we wait for the development
-  server to initialize.
-- WXT uses Vite uses the Chokidar file watcher under the hood. Our
-  base injection file is included in the watchlist by virtue of being
-  in `src/entrypoints`, but not the modules it imports. I've
-  inelegantly hard-coded a directory in which all of them live that
-  the watcher will search, because I doubt it's possible to step
-  through specific chains of dependency between SASS files without
-  writing a Vite plugin.
-- We add an event listener that invalidates `injection.scss` if any
-  watched `.scss` file is written to. As we need preprocessors to
-  fire, this means sending it through the WXT builder. We need,
-  finally, to reload the entire extension (not a terribly expensive
-  operation) to get the content script to run again without a refresh.
-
-HMR for our unlisted stylesheet is now functional. Try making an edit
-to it, though, and you may notice some peculiar behavior. I'll declare
-the variable as something else:
-
-```scss
-// src/lib/styles/_variables.scss
-
-$color: red;
-```
-
-We should see in DevTools that the style resource has hot-reloaded
-accordingly; it will show up correctly if you navigate again to the
-URL in `<link>`. But the changes do not show up on the screen unless
-we manually tick the box next to our applied style with Inspect
-Element, and our changes disappear even then upon a refresh.
-
-This is because the new `<link>` element that we've created points to
-the same URL as the one we delete with `node.remove()` each time the
-extension reloads. Firefox caches this asset and does not re-read
-its contents.
-
-As a solution, we can add a unique tag to the end of each URL that
-forces the hot reload during development:
+Finally, I modify the content script so that it takes a look at our
+user settings and calls the corresponding functions according to which
+ones are flagged as `true`:
 
 ```ts
 // src/entrypoints/content.ts
 
-const inject_style_and_repaint = (): void => {
-  const href = browser.runtime.getURL('content-scripts/content.css')
-  const href =
-    browser.runtime.getURL('content-scripts/content.css') + `?t=${Date.now()}`
-  // ...
-}
-```
-
-We never read this option ourselves, but Firefox registers it as a URL
-that differs from the one stored in cache and will trigger the
-repaint. This leaves us with a complete content script that looks like
-this:
-
-```ts
-// src/entrypoints/content.ts
-import '../assets/injection.scss'
-
-const inject_style_and_repaint = (): void => {
-  const href =
-    browser.runtime.getURL('content-scripts/content.css') + `?t=${Date.now()}`
-
-  const prev = document.querySelector('link[data-extension-style]')
-  if (prev) prev.remove()
-
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = href
-  link.dataset.extensionStyle = href
-
-  const parent = document.head ?? document.documentElement
-  parent.appendChild(link)
-}
+import { tweaks } from '@/lib/tweaks'
+import { getUserSettings } from '@/lib/utils/settings'
 
 export default defineContentScript({
   matches: ['*://*.google.com/*'],
   cssInjectionMode: 'manual',
-  main() {
-    if (
-      document.head ||
-      document.readyState === 'complete' ||
-      document.readyState === 'interactive'
-    ) {
-      inject_style_and_repaint()
-    } else {
-      window.addEventListener('DOMContentLoaded', inject_style_and_repaint, {
-        once: true,
-      })
-    }
+  runAt: 'document_start',
+  async main() {
+    const settings = await getUserSettings() // e.g., { darkMode: true, test: false }
+
+    for (const [name, tweak] of Object.entries(tweaks))
+      if (settings[name]) tweak()
   },
 })
 ```
 
-And we're done.
+We're good to go on this front.
 
-## Enhancements
+## Improving HMR
 
 _Coming soon._
