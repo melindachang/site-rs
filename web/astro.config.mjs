@@ -2,19 +2,10 @@
 import { defineConfig } from 'astro/config'
 import mdx from '@astrojs/mdx'
 import svelte from '@astrojs/svelte'
-import addIconsToHeadings from './src/plugins/remark-heading-icons.ts'
-// import italiciseHeadingPreps from './src/plugins/remark-heading-prep-italic.ts'
+import addIconsToH2 from './src/plugins/rehype-h2-icons'
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [
-    svelte(),
-    mdx({
-      remarkPlugins: [
-        addIconsToHeadings,
-        // italiciseHeadingPreps,
-      ],
-    }),
-  ],
+  integrations: [svelte(), mdx({ rehypePlugins: [addIconsToH2] })],
   markdown: { shikiConfig: { theme: 'kanagawa-wave' } },
 })

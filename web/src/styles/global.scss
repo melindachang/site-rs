@@ -29,14 +29,7 @@ main {
 
 // prose
 .note {
-    padding-top: 2.4rem;
     padding-bottom: 16rem;
-
-    .footnotes {
-        @include bp-lg {
-            display: none;
-        }
-    }
 
     &__body {
         text-align: justify;

@@ -8,7 +8,7 @@ published: true
 ---
 
 I regularly develop browser extensions for personal use. It's entirely
-possible to make quality-of-life enhancements to various websites with
+possible to achieve the quality-of-life enhancements that I want with
 a combination of userscript and stylesheet managers (I favor
 [Violentmonkey](https://violentmonkey.github.io/) and
 [Stylus](https://github.com/openstyles/stylus)), but any one site
@@ -18,18 +18,19 @@ extension can make sense.
 
 Available tooling for extension development is dated, generally. I've
 tried for a while now to nail down a stack and workflow to implement
-the base functionality I want (that is, programmatic stylesheet
-injections) with minimal friction. It needs to support the following:
+the base functionality I'm looking for (that is, programmatic
+stylesheet injections) with minimal friction. It needs to support the
+following:
 
 1. _Firefox and Chrome._ I don't use Chromium-based browsers anymore,
-   but supporting the former generally entails supporting the latter. I
-   have used [CRXJS](https://crxjs.dev/vite-plugin) to this end before,
-   but it relies on Chrome's API for hot reload and is therefore out of
-   the running.
+   but I think that most extension frameworks worth their salt make
+   building for multiple platforms trivially easy. I have used
+   [CRXJS](https://crxjs.dev/vite-plugin) to this end before, but it
+   relies on Chrome's API for hot reload and is therefore out of the
+   running.
 
-2. _Modern frameworks, TypeScript, and CSS preprocessing._ I use SCSS,
-   mostly, because I find that indented syntax sometimes interferes
-   with formatters. I haven't written vanilla JavaScript or CSS since
+2. _Modern JavaScript frameworks, TypeScript, and CSS preprocessing._
+   I use SCSS. I haven't written vanilla JavaScript or CSS since
    middle school and I do not intend to start now.
 
 3. _Hot module reload._ Specifically, the stylesheets must be watched
@@ -45,8 +46,8 @@ for it.
 
 _Edit (2025-07)._ I've made some changes to this implementation, and
 it is now much more stable than it was previously (I used to rely on a
-patched version of WXT to make an `injection.scss`
-entrypoint). I consider this iteration largely production-ready.
+patched version of WXT to make an `injection.scss` entrypoint). Still
+not what I would call production-ready. Use with caution.
 
 ## Getting started with WXT
 
@@ -253,6 +254,7 @@ We can call it wherever needed, like so:
 ```ts
 // src/lib/tweaks/darkMode/index.ts
 
+import styles from './injection.scss?inline'
 import { injectStyle } from '@/lib/utils/inject-style'
 
 export default function darkMode() {
@@ -260,11 +262,10 @@ export default function darkMode() {
 }
 ```
 
-I won't implement a full interface that allows users to define their
-local preferences, but I'll assume for simplicity's sake that we have
-some logic in our extension popup that saves them as boolean flags. We
-can write a function that allows us to fetch those preferences using
-the browser API:
+I won't implement a full interface, but I'll assume for simplicity's
+sake that we have some logic in our extension's popup that saves
+user-inputted preferences as boolean flags. Let's write a function
+that allows us to fetch those preferences using the browser API:
 
 ```ts
 // src/lib/utils/settings.ts
@@ -312,7 +313,7 @@ export default defineContentScript({
   cssInjectionMode: 'manual',
   runAt: 'document_start',
   async main() {
-    const settings = await getUserSettings() // { darkMode: bool; test: bool }
+    const settings = await getUserSettings()
 
     for (const [name, tweak] of Object.entries(tweaks))
       if (settings[name]) tweak()
@@ -320,7 +321,7 @@ export default defineContentScript({
 })
 ```
 
-We're good to go on this front.
+And we're done!
 
 ## Improving HMR
 
