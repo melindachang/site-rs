@@ -13,43 +13,43 @@ notes = notes.sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   <Fragment name="head">
     <title>Notes | Melinda Chang</title>
   </Fragment>
-  <header class="header">
-    <h1 class="header__title">Notes</h1>
-    <p class="header__caption">
-      I try to post here on occasion. In order of likelihood: (1) software, (2)
-      what I'm reading, (3) what I think you should be reading, (4) anything
-      else. Consider subscribing via RSS.
-    </p>
-  </header>
-  <article class="notes">
-    {
-      notes.map(note => {
-        if (note.data.published) {
-          return (
-            <a class="notes__entry" href={`/notes/${note.slug}`}>
-              <i class="notes__entry__icon">
-                <Fragment set:html={arrowSvg} />
-              </i>
-              <h2 class="notes__entry__title">{note.data.title}</h2>
-              <div class="notes__entry__metadata">
-                <h3 class="notes__entry__byline">
-                  {formatRawDate(note.data.date)}
-                  {note.data.summary && `· ${note.data.summary}`}
-                </h3>
-                {note.data.tags && (
-                  <div class="notes__entry__tags">
-                    {note.data.tags.map(tag => (
-                      <span class="notes__entry__tag">{tag}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </a>
-          )
-        }
-      })
-    }
-  </article>
+  <!-- <header class="header"> -->
+  <!--   <h1 class="header__title">Notes</h1> -->
+  <!--   <p class="header__caption"> -->
+  <!--     I try to post here on occasion. In order of likelihood: (1) software, (2) -->
+  <!--     what I'm reading, (3) what I think you should be reading, (4) anything -->
+  <!--     else. Consider subscribing via RSS. -->
+  <!--   </p> -->
+  <!-- </header> -->
+  <!-- <article class="notes"> -->
+  <!--   { -->
+  <!--     notes.map(note => { -->
+  <!--       if (note.data.published) { -->
+  <!--         return ( -->
+  <!--           <a class="notes__entry" href={`/notes/${note.slug}`}> -->
+  <!--             <i class="notes__entry__icon"> -->
+  <!--               <Fragment set:html={arrowSvg} /> -->
+  <!--             </i> -->
+  <!--             <h2 class="notes__entry__title">{note.data.title}</h2> -->
+  <!--             <div class="notes__entry__metadata"> -->
+  <!--               <h3 class="notes__entry__byline"> -->
+  <!--                 {formatRawDate(note.data.date)} -->
+  <!--                 {note.data.summary && `· ${note.data.summary}`} -->
+  <!--               </h3> -->
+  <!--               {note.data.tags && ( -->
+  <!--                 <div class="notes__entry__tags"> -->
+  <!--                   {note.data.tags.map(tag => ( -->
+  <!--                     <span class="notes__entry__tag">{tag}</span> -->
+  <!--                   ))} -->
+  <!--                 </div> -->
+  <!--               )} -->
+  <!--             </div> -->
+  <!--           </a> -->
+  <!--         ) -->
+  <!--       } -->
+  <!--     }) -->
+  <!--   } -->
+  <!-- </article> -->
 </BaseLayout>
 
 <style lang="scss">
